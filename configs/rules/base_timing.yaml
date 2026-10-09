@@ -1,0 +1,22 @@
+# Base timing QA rule pack (M5).
+#
+# Rules are DATA: QA standards change by editing this file, not Python.
+# Metric names follow <domain>.<metric>_<unit> (produced by the M4
+# OpenSTA parser). A missing metric evaluates to UNKNOWN - never 0.
+pack: base_timing
+version: 1
+
+rules:
+  - id: timing.wns.non_negative
+    metric: sta.wns_ns
+    check: ge
+    threshold: 0.0
+    severity: error
+    description: "Worst slack must be non-negative (no setup violations)"
+
+  - id: timing.tns.non_negative
+    metric: sta.tns_ns
+    check: ge
+    threshold: 0.0
+    severity: error
+    description: "Total negative slack must be non-negative"

@@ -1,0 +1,10 @@
+# YosysDriver configuration (M2.3).
+#
+# NOTE: this configures the CONTAINERIZED driver; the host-level lookup
+# table used by `aemp doctor` is configs/tools/tools.yaml (different role).
+name: yosys
+executor: docker
+image: aemp-eda-base:0.1.0
+binary: yosys
+container_workdir: /workspace
+version_args: ["-V"]

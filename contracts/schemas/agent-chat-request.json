@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/agent-chat-request.json",
+  "title": "Agent chat request",
+  "description": "POST /api/v1/chat request (Frontend -> Agent Backend). Synchronous in M6.0; SSE streaming is a later milestone.",
+  "type": "object",
+  "required": ["message"],
+  "additionalProperties": false,
+  "properties": {
+    "message": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "session_id": { "type": ["string", "null"] }
+  }
+}

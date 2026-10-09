@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/qa-request.json",
+  "title": "QA evaluation request",
+  "description": "POST /api/v1/runs/{run_id}/qa request body. Rules are data; the caller only names the rule pack.",
+  "type": "object",
+  "required": ["rule_pack"],
+  "additionalProperties": false,
+  "properties": {
+    "rule_pack": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to a QA rule pack YAML, resolved by the Platform."
+    }
+  }
+}

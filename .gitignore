@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Editors
+.idea/
+.vscode/
+
+# Project: run artifacts must never be committed (anchored to this
+# directory so the src/aemp/runs/ source package is NOT matched)
+/runs/
+
+# Demo EDA assets extracted/generated at runtime (see examples/sta/README.md)
+examples/sta/*.lib
+examples/sta/mapped.v
+examples/sta/*.rpt

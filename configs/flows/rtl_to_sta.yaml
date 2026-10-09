@@ -1,0 +1,44 @@
+# M3 demo flow: RTL -> Liberty-mapped netlist -> static timing analysis.
+#
+# inputs.files are resolved relative to the working directory of the
+# aemp invocation (repo root for the demo). The demo Liberty is extracted
+# from the pinned OpenSTA image (see examples/sta/README.md) and is NOT
+# a commercial PDK.
+version: "aemp.flow/v1"
+
+flow:
+  id: rtl_to_sta
+  name: RTL to STA
+  description: >
+    Synthesize the demo counter onto Nangate45 demo standard cells and
+    run static timing analysis on the mapped netlist.
+
+inputs:
+  files:
+    rtl: examples/sta/design.v
+    liberty: examples/sta/demo_nangate45_typ.lib
+    sdc: examples/sta/timing.sdc
+  params:
+    top: simple_counter
+
+steps:
+  - id: synth
+    tool: yosys
+    operation: yosys.synthesize
+    inputs:
+      rtl: ${inputs.rtl}
+      liberty: ${inputs.liberty}
+      top: ${inputs.top}
+    outputs:
+      netlist: mapped.v
+
+  - id: sta
+    tool: opensta
+    operation: opensta.timing_analysis
+    inputs:
+      netlist: ${steps.synth.outputs.netlist}
+      liberty: ${inputs.liberty}
+      sdc: ${inputs.sdc}
+      top: ${inputs.top}
+    outputs:
+      report: timing.rpt

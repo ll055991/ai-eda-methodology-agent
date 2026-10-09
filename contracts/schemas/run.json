@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/run.json",
+  "title": "Run detail",
+  "description": "GET /api/v1/runs/{run_id} response. Facts (metrics) and verdicts (QA findings) are never merged: findings live in the QA API.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "operation",
+    "step_id",
+    "lifecycle_status",
+    "execution_status",
+    "engineering_status",
+    "tool",
+    "metrics",
+    "inputs",
+    "artifacts",
+    "diagnostics",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
+    },
+    "operation": { "type": "string", "minLength": 1 },
+    "step_id": { "type": ["string", "null"] },
+    "lifecycle_status": { "enum": ["created", "running", "success", "failed"] },
+    "execution_status": { "enum": ["success", "failed", "unknown"] },
+    "engineering_status": {
+      "enum": ["pass", "fail", "unknown", "success", "failed"],
+      "description": "QA verdict vocabulary (pass/fail/unknown, M5) plus the M1-era synonyms (success/failed) still valid in aemp.result/v0."
+    },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Parser-derived facts only (<domain>.<metric>_<unit> -> number). Missing metric = absent, never 0.",
+      "additionalProperties": { "type": "number" }
+    },
+    "inputs": { "type": "array", "items": { "$ref": "#/$defs/fileRecord" } },
+    "artifacts": { "type": "array", "items": { "$ref": "#/$defs/artifact" } },
+    "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+    "provenance": {
+      "type": "object",
+      "required": ["created_at"],
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "fileRecord": {
+      "type": "object",
+      "required": ["role", "path", "exists"],
+      "additionalProperties": false,
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "exists": { "type": "boolean" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "exists": { "const": true } } },
+          "then": { "required": ["bytes", "sha256"] }
+        },
+        {
+          "if": { "properties": { "exists": { "const": false } } },
+          "then": {
+            "not": { "anyOf": [{ "required": ["bytes"] }, { "required": ["sha256"] }] }
+          }
+        }
+      ]
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["artifact_id", "role", "path", "exists"],
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Run-relative artifact path (the only id the API accepts for GET .../artifacts/{artifact_id})."
+        },
+        "role": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "exists": { "type": "boolean" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "exists": { "const": true } } },
+          "then": { "required": ["bytes", "sha256"] }
+        },
+        {
+          "if": { "properties": { "exists": { "const": false } } },
+          "then": {
+            "not": { "anyOf": [{ "required": ["bytes"] }, { "required": ["sha256"] }] }
+          }
+        }
+      ]
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["severity", "code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "severity": { "enum": ["info", "warning", "error"] },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" }
+      }
+    }
+  }
+}

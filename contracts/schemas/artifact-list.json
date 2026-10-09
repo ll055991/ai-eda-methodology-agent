@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/artifact-list.json",
+  "title": "Artifact list",
+  "description": "GET /api/v1/runs/{run_id}/artifacts response. Metadata only in M6.0; content retrieval is a later, separately-reviewed capability.",
+  "type": "object",
+  "required": ["run_id", "artifacts"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["artifact_id", "role", "path", "exists"],
+        "additionalProperties": false,
+        "properties": {
+          "artifact_id": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "exists": { "type": "boolean" },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "exists": { "const": true } } },
+            "then": { "required": ["bytes", "sha256"] }
+          },
+          {
+            "if": { "properties": { "exists": { "const": false } } },
+            "then": {
+              "not": { "anyOf": [{ "required": ["bytes"] }, { "required": ["sha256"] }] }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+# Synthetic sample used by the M1 demo run: `aemp` freezes this file into
+# runs/<run_id>/flow.spec.frozen.yaml to demonstrate frozen configuration.
+# This is NOT a real flow spec - the flow spec format arrives with M3.
+operation: example

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/run-summary.json",
+  "title": "Run summary",
+  "description": "POST /api/v1/flows/run response. 'status' is the run lifecycle outcome; execution and engineering statuses stay separate (dual-state, M1).",
+  "type": "object",
+  "required": ["run_id", "status", "execution_status", "engineering_status"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
+    },
+    "status": { "enum": ["created", "running", "success", "failed"] },
+    "execution_status": { "enum": ["success", "failed", "unknown"] },
+    "engineering_status": {
+      "enum": ["pass", "fail", "unknown", "success", "failed"],
+      "description": "QA verdict vocabulary (pass/fail/unknown, M5) plus the M1-era synonyms (success/failed) still valid in aemp.result/v0."
+    }
+  }
+}

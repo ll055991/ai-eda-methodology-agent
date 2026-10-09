@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-backend"
+version = "0.1.0"
+description = "AEMP Agent Backend base (M6.2): chat API stub + PlatformClient. Talks to the Platform only over the Platform API HTTP contract."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+    "jsonschema>=4.18",
+    "PyYAML>=6.0",
+    # M6.5: explicit StateGraph orchestration. langchain-core is a forced
+    # transitive dependency; no langchain agent APIs are used or imported.
+    "langgraph>=1.0,<2",
+    # M7.2: the official MCP Python SDK for the MCP tool transport. Only the
+    # SDK's client half is used; the agent never becomes an MCP server and
+    # never gains execution capability through it.
+    "mcp>=2.3,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]

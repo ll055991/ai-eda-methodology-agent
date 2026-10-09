@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/flow.json",
+  "title": "Flow run request",
+  "description": "POST /api/v1/flows/run request body. The caller names a flow spec; it never builds tool commands itself.",
+  "type": "object",
+  "required": ["flow"],
+  "additionalProperties": false,
+  "properties": {
+    "flow": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to an aemp.flow/v1 spec, resolved by the Platform (not by the caller)."
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Reserved (M6.1): per-invocation input overrides. M6.0 rejects non-empty overrides with INVALID_REQUEST."
+    }
+  }
+}

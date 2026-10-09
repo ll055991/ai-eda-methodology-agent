@@ -1,0 +1,218 @@
+openapi: 3.1.0
+info:
+  title: AEMP Platform API
+  version: 1.0.0
+  description: |
+    Platform Backend contract (M6.0). The deterministic Platform exposes
+    Flow / Run / QA / Artifact / History capabilities only. It never
+    exposes internal classes (FlowEngine, RunManager, drivers), never
+    accepts raw tool commands, and never reads arbitrary file paths.
+
+    Semantics that callers must preserve:
+      - execution_status (did the tool run?) and engineering_status (did
+        the engineering verdict hold?) are independent; missing evidence
+        is "unknown", never "fail" and never "pass".
+      - a failed run is a valid 200 response (a recorded fact), not an
+        HTTP error.
+servers:
+  - url: http://localhost:8000
+    description: Reference deployment (HTTP server lands in M6.1)
+
+paths:
+  /api/v1/flows/run:
+    post:
+      operationId: runFlow
+      summary: Execute a flow spec as one tracked run
+      description: |
+        Validates and executes a flow spec (fail-fast). May take minutes;
+        M6.0 is synchronous. Environment failures (no Docker daemon /
+        missing image) surface as TOOL_ENVIRONMENT_UNAVAILABLE; an
+        invalid spec surfaces as FLOW_VALIDATION_FAILED.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas/flow.json
+      responses:
+        "200":
+          description: Run finished (success and failed are both valid outcomes)
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/run-summary.json
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "503":
+          $ref: "#/components/responses/EnvironmentUnavailable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/runs:
+    get:
+      operationId: listRuns
+      summary: List recent runs (history)
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: status
+          in: query
+          schema:
+            enum: [created, running, success, failed]
+      responses:
+        "200":
+          description: Run page, newest first
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/run-list.json
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/runs/{run_id}:
+    get:
+      operationId: getRun
+      summary: Read one run (dual-state statuses, facts, evidence)
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      responses:
+        "200":
+          description: Run detail
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/run.json
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/runs/{run_id}/qa:
+    post:
+      operationId: runQa
+      summary: Evaluate a QA rule pack against a run's recorded metrics
+      description: |
+        Delegates to the deterministic QA engine (M5); the API layer
+        performs no judgment itself. The verdict is written into the run
+        archive (engineering status only; execution status is untouched).
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas/qa-request.json
+      responses:
+        "200":
+          description: QA result (PASS, FAIL and UNKNOWN are all valid outcomes)
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/qa.json
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/runs/{run_id}/artifacts:
+    get:
+      operationId: listArtifacts
+      summary: List artifacts recorded by the run registry
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      responses:
+        "200":
+          description: Artifact metadata list
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/artifact-list.json
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/runs/{run_id}/artifacts/{artifact_id}:
+    get:
+      operationId: getArtifact
+      summary: Read one registered artifact's metadata
+      description: |
+        artifact_id is the run-relative artifact path recorded by the run
+        registry (URL-encoded). Anything not in that registry returns
+        ARTIFACT_NOT_FOUND - there is no arbitrary file access.
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - name: artifact_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Artifact metadata
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/artifact.json
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  parameters:
+    RunId:
+      name: run_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
+
+  schemas:
+    Error:
+      $ref: ./schemas/error.json
+
+  responses:
+    BadRequest:
+      description: INVALID_REQUEST
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/error.json
+    NotFound:
+      description: RUN_NOT_FOUND | FLOW_NOT_FOUND | ARTIFACT_NOT_FOUND
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/error.json
+    ValidationFailed:
+      description: FLOW_VALIDATION_FAILED
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/error.json
+    EnvironmentUnavailable:
+      description: TOOL_ENVIRONMENT_UNAVAILABLE
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/error.json
+    InternalError:
+      description: INTERNAL_ERROR | QA_EVALUATION_FAILED | TOOL_EXECUTION_FAILED
+      content:
+        application/json:
+          schema:
+            $ref: ./schemas/error.json

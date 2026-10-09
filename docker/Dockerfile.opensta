@@ -1,0 +1,28 @@
+# AEMP OpenSTA image (M2.5): thin, digest-pinned wrapper around the official
+# OpenROAD-project OpenSTA image.
+#
+# The upstream digest below was resolved from `openroad/opensta:latest` on
+# 2026-10-07 and is verified in docker/README.md. Building this wrapper
+# self-checks the tool and gives the platform a locally named, version-stable
+# tag: aemp-eda-opensta:3.1.0.
+#
+# Real version inside (verified): OpenSTA 3.1.0 (git d1e43c6f9f).
+#
+# The upstream image's ENTRYPOINT is the RELATIVE path "OpenSTA/build/sta",
+# which breaks as soon as a custom working directory is used. This wrapper
+# clears the entrypoint and puts the binary on PATH instead, so the platform
+# can launch it uniformly as a plain command:  docker run <image> sta ...
+# (the same shape as the Yosys environment).
+FROM openroad/opensta@sha256:d5aa34eed86e49a5d36afc2a81961cabb802f0439b472fe07e178289389ae1a0
+
+LABEL org.opencontainers.image.title="aemp-eda-opensta" \
+      org.opencontainers.image.description="OpenSTA 3.1.0 static timing analysis environment for AEMP" \
+      org.opencontainers.image.vendor="AEMP Contributors"
+
+ENV PATH="/OpenSTA/build:${PATH}"
+ENTRYPOINT []
+
+# Fail the build early if the tool cannot run.
+RUN sta -version | head -1
+
+WORKDIR /workspace

@@ -1,0 +1,23 @@
+# Mapped synthesis for the M2.5 STA demo: map the counter onto the
+# Nangate45 demo standard cells (from the pinned OpenSTA image) so the
+# netlist has real Liberty cells with timing models.
+#
+# Paths are relative to the directory this script runs in (mount it as the
+# container working directory). Demo library only - NOT a real PDK.
+read_verilog design.v
+hierarchy -check -top simple_counter
+proc
+opt
+fsm
+opt
+memory
+opt
+techmap
+opt
+dfflibmap -liberty demo_nangate45_typ.lib
+abc -liberty demo_nangate45_typ.lib
+setundef -zero
+splitnets
+opt_clean -purge
+stat -liberty demo_nangate45_typ.lib
+write_verilog -noattr mapped.v

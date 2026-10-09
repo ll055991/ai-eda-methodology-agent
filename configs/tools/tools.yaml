@@ -1,0 +1,22 @@
+# EDA tool lookup configuration for `aemp doctor`.
+#
+# `executable` is resolved on PATH; `version_args` is the tool's OFFICIAL
+# version command. Version discipline: a version is either what the tool
+# itself reports or UNKNOWN - it is never guessed. Each tool is configured
+# independently here instead of via if/else chains in code.
+tools:
+  yosys:
+    executable: yosys
+    version_args: ["-V"]
+
+  openroad:
+    executable: openroad
+    version_args: ["-version"]
+
+  opensta:
+    executable: sta
+    version_args: ["-version"]
+
+  klayout:
+    executable: klayout
+    version_args: ["-v"]

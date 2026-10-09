@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/artifact.json",
+  "title": "Artifact record",
+  "description": "GET /api/v1/runs/{run_id}/artifacts/{artifact_id} response. Only artifacts already recorded by the run registry are addressable - the API is never an arbitrary file reader.",
+  "type": "object",
+  "required": ["artifact_id", "role", "path", "exists"],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Run-relative artifact path (URL-encoded in the request path)."
+    },
+    "role": { "type": "string", "minLength": 1 },
+    "path": { "type": "string", "minLength": 1 },
+    "exists": { "type": "boolean" },
+    "bytes": { "type": "integer", "minimum": 0 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "exists": { "const": true } } },
+      "then": { "required": ["bytes", "sha256"] }
+    },
+    {
+      "if": { "properties": { "exists": { "const": false } } },
+      "then": {
+        "not": { "anyOf": [{ "required": ["bytes"] }, { "required": ["sha256"] }] }
+      }
+    }
+  ]
+}

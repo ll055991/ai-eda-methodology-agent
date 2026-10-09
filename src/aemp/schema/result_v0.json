@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/schemas/result-v0.json",
+  "title": "AEMP result envelope",
+  "description": "Versioned result envelope for every recorded aemp run. execution.status (did the tool run?) is independent of engineering.status (did the engineering assertion hold?); missing evidence is unknown, never fail.",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "operation",
+    "tool",
+    "execution",
+    "engineering",
+    "inputs",
+    "artifacts",
+    "metrics",
+    "diagnostics",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "aemp.result/v0"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
+    },
+    "step_id": {
+      "type": ["string", "null"],
+      "description": "Flow step this result belongs to; null for run-level results (M1)."
+    },
+    "operation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version", "path", "argv"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": {
+          "type": "string",
+          "description": "Self-reported by the tool, or 'unknown' when no probe succeeded. Never guessed."
+        },
+        "path": { "type": ["string", "null"] },
+        "argv": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": [
+        "status",
+        "exit_code",
+        "duration_ms",
+        "command",
+        "cwd",
+        "log_path",
+        "log_bytes",
+        "log_truncated"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["success", "failed", "unknown"] },
+        "exit_code": { "type": ["integer", "null"] },
+        "duration_ms": { "type": ["integer", "null"], "minimum": 0 },
+        "command": { "type": ["string", "null"] },
+        "cwd": { "type": ["string", "null"] },
+        "log_path": { "type": ["string", "null"] },
+        "log_bytes": { "type": "integer", "minimum": 0 },
+        "log_truncated": { "type": "boolean" }
+      }
+    },
+    "engineering": {
+      "type": "object",
+      "required": ["status", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": ["success", "failed", "unknown", "pass", "fail"],
+          "description": "QA/engineering verdict vocabulary (pass/fail/unknown, M5) plus M1-era synonyms (success/failed)."
+        },
+        "summary": { "type": ["string", "null"] }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fileRecord" }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fileRecord" }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Open typed-facts area. Populated by later milestones (parsers); never by hand."
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "code", "message"],
+        "properties": {
+          "severity": { "enum": ["info", "warning", "error"] },
+          "code": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["created_at"],
+      "properties": {
+        "created_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": ["string", "null"], "format": "date-time" },
+        "run_status": {
+          "enum": ["created", "running", "success", "failed"],
+          "description": "Run lifecycle state, mirrored into the SQLite index."
+        },
+        "aemp_version": { "type": "string" },
+        "host": { "type": "string" },
+        "python_version": { "type": "string" },
+        "platform": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "fileRecord": {
+      "type": "object",
+      "required": ["role", "path", "exists"],
+      "additionalProperties": false,
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Run-relative or project-relative POSIX-style path; absolute only for files outside the workspace."
+        },
+        "exists": { "type": "boolean" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "exists": { "const": true } } },
+          "then": { "required": ["bytes", "sha256"] }
+        },
+        {
+          "if": { "properties": { "exists": { "const": false } } },
+          "then": {
+            "not": { "anyOf": [{ "required": ["bytes"] }, { "required": ["sha256"] }] }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/error.json",
+  "title": "AEMP API error document",
+  "description": "Stable error contract. Python exception texts are never part of the contract; callers switch on 'code'.",
+  "type": "object",
+  "required": ["error"],
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "INVALID_REQUEST",
+            "RUN_NOT_FOUND",
+            "FLOW_NOT_FOUND",
+            "FLOW_VALIDATION_FAILED",
+            "TOOL_EXECUTION_FAILED",
+            "TOOL_ENVIRONMENT_UNAVAILABLE",
+            "QA_EVALUATION_FAILED",
+            "ARTIFACT_NOT_FOUND",
+            "INTERNAL_ERROR",
+            "APPROVAL_NOT_FOUND",
+            "APPROVAL_ALREADY_RESOLVED",
+            "APPROVAL_MISMATCH"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "details": {
+          "type": "object",
+          "description": "Machine-readable extras (e.g. field names); never contains exception reprs."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/agent-chat-response.json",
+  "title": "Agent chat response",
+  "description": "POST /api/v1/chat and /api/v1/chat/resume response. Every factual claim must reference the run it came from; status=interrupted means the graph is paused awaiting human approval (M6.6).",
+  "type": "object",
+  "required": ["message", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "message": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "status": { "enum": ["completed", "failed", "interrupted", "pending_approval"] },
+    "run_id": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
+    },
+    "session_id": { "type": ["string", "null"] },
+    "approval_required": {
+      "type": "boolean",
+      "description": "Reserved (M6.7 Human Approval): true when the agent paused for human review."
+    },
+    "approval_id": {
+      "type": ["string", "null"],
+      "description": "Reserved (M6.7): identifier of the pending approval request."
+    },
+    "resume_token": {
+      "type": ["string", "null"],
+      "description": "Reserved (M6.7): token used to resume after approve/reject."
+    }
+  }
+}

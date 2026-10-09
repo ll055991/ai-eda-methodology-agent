@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/qa.json",
+  "title": "QA evaluation result",
+  "description": "POST /api/v1/runs/{run_id}/qa response. Overall status is uppercase (UI-facing gate); per-finding status stays lowercase. A missing metric is UNKNOWN - never 0, never pass, never fail.",
+  "type": "object",
+  "required": ["run_id", "status", "rule_pack", "summary", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
+    },
+    "status": { "enum": ["PASS", "FAIL", "UNKNOWN"] },
+    "rule_pack": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_rules", "passed", "failed", "unknown", "warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "total_rules": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "unknown": { "type": "integer", "minimum": 0 },
+        "warnings": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Failed findings with severity=warning (visible, do not gate)."
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "metric",
+          "check",
+          "threshold",
+          "severity",
+          "status",
+          "expected",
+          "actual",
+          "message"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "rule_id": { "type": "string", "minLength": 1 },
+          "metric": { "type": "string", "minLength": 1 },
+          "check": { "enum": ["eq", "ne", "gt", "ge", "lt", "le", "between"] },
+          "threshold": {
+            "anyOf": [
+              { "type": "number" },
+              { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+            ]
+          },
+          "severity": { "enum": ["info", "warning", "error"] },
+          "status": { "enum": ["pass", "fail", "unknown"] },
+          "expected": { "type": "string" },
+          "actual": { "type": ["number", "null"] },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

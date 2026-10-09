@@ -1,0 +1,12 @@
+# OpenSTADriver configuration (M2.5).
+#
+# The image is the digest-pinned wrapper built from docker/Dockerfile.opensta
+# (upstream: openroad/opensta, OpenSTA 3.1.0, git d1e43c6f9f - see
+# docker/README.md). Host-level `configs/tools/tools.yaml` remains the
+# doctor lookup table with a different role.
+name: opensta
+executor: docker
+image: aemp-eda-opensta:3.1.0
+binary: sta
+container_workdir: /workspace
+version_args: ["-version"]

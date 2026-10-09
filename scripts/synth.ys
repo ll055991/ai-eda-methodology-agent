@@ -1,0 +1,14 @@
+# Real synthesis script for the M2.2 environment demo.
+#
+# Run inside the container with the repository mounted at /workspace:
+#   yosys -s scripts/synth.ys      (cwd = /workspace)
+#
+# Generic gate-level synthesis only - no PDK, no Liberty, no timing targets.
+# Output path is repo-relative so the produced netlist lands in the
+# gitignored demo run directory on the host via the volume mount.
+
+read_verilog examples/rtl/simple_counter.v
+hierarchy -check -top simple_counter
+synth -top simple_counter
+stat
+write_verilog -noattr runs/demo-yosys/artifacts/synthesized.v

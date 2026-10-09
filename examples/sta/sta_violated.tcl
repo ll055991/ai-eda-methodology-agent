@@ -1,0 +1,7 @@
+read_liberty demo_nangate45_typ.lib
+read_verilog mapped.v
+link_design simple_counter
+read_sdc tight.sdc
+report_checks
+report_worst_slack
+report_tns

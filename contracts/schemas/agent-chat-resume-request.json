@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aemp.dev/contracts/agent-chat-resume-request.json",
+  "title": "Agent chat resume request",
+  "description": "POST /api/v1/chat/resume request (M6.6 HITL). The client can only decide an EXISTING pending approval; it can never name a tool or approve a tool directly.",
+  "type": "object",
+  "required": ["session_id", "approval_id", "decision"],
+  "additionalProperties": false,
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Session/thread id the interrupted execution belongs to."
+    },
+    "approval_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Approval id returned by the interrupted chat response."
+    },
+    "decision": { "enum": ["approved", "rejected"] },
+    "reason": {
+      "type": ["string", "null"],
+      "maxLength": 1000,
+      "description": "Optional human-readable decision reason."
+    }
+  }
+}
